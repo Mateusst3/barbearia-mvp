@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum CashEntryType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  workStartHour Int          @default(9)
+  workEndHour   Int          @default(19)
+  slotMinutes   Int          @default(30)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  appointments Appointment[]
+  cashEntries  CashEntry[]
+  services     Service[]
+}
+
+model Appointment {
+  id          String             @id @default(cuid())
+  userId      String
+  clientName  String
+  serviceId   String
+  serviceName String
+  durationMinutes Int
+  startAt     DateTime
+  priceCents  Int
+  status      AppointmentStatus  @default(SCHEDULED)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  user        User               @relation(fields: [userId], references: [id])
+  service     Service            @relation(fields: [serviceId], references: [id])
+  reschedules RescheduleHistory[]
+  cashEntry   CashEntry?
+
+  @@index([userId, startAt])
+  @@unique([userId, startAt])
+}
+
+model RescheduleHistory {
+  id            String      @id @default(cuid())
+  appointmentId String
+  fromAt        DateTime
+  toAt          DateTime
+  createdAt     DateTime    @default(now())
+
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+
+  @@index([appointmentId])
+}
+
+model CashEntry {
+  id            String       @id @default(cuid())
+  userId        String
+  appointmentId String?      @unique
+  type          CashEntryType
+  amountCents   Int
+  description   String
+  occurredAt    DateTime
+  createdAt     DateTime     @default(now())
+
+  user          User         @relation(fields: [userId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+
+  @@index([userId, occurredAt])
+}
+
+model Service {
+  id              String      @id @default(cuid())
+  userId          String
+  name            String
+  priceCents      Int
+  durationMinutes Int         @default(30)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id])
+  appointments    Appointment[]
+
+  @@index([userId])
+  @@unique([userId, name])
+}
