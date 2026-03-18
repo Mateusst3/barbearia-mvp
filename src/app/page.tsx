@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -29,7 +29,7 @@ interface Service {
   durationMinutes: number;
 }
 
-export default function HomePage() {
+function HomePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [barbers, setBarbers] = useState<Barber[]>([]);
@@ -565,5 +565,13 @@ export default function HomePage() {
       </section>
       </div>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={null}>
+      <HomePageContent />
+    </Suspense>
   );
 }

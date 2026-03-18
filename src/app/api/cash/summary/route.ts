@@ -45,7 +45,7 @@ export async function GET() {
     const [income, expense] = await Promise.all([
       prisma.cashEntry.aggregate({
         where: {
-          userId: user.id,
+          userId: user!.id,
           type: "INCOME",
           occurredAt: {
             gte: start,
@@ -56,7 +56,7 @@ export async function GET() {
       }),
       prisma.cashEntry.aggregate({
         where: {
-          userId: user.id,
+          userId: user!.id,
           type: "EXPENSE",
           occurredAt: {
             gte: start,
